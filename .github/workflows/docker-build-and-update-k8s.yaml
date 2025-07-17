@@ -1,5 +1,5 @@
 # https://docs.docker.com/build/ci/github-actions/multi-platform/
-name: Publishing image to Docker Hub
+name: Build Docker image and update K8s manifest
 on:
   push:
     branches:
@@ -7,12 +7,11 @@ on:
     paths:
       - app/**
 jobs:
-  push_to_registry:
-    name: Push Docker image to Docker Hub
+  build_and_update:
     runs-on: ubuntu-latest
     permissions:
+      contents: write
       packages: write
-      contents: read
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
@@ -29,7 +28,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         
-      - name: Set short SHA
+      - name: Set short SHA as env variable
         run: echo "GIT_HASH=$(git rev-parse --short ${{ github.sha }})" >> $GITHUB_ENV
 
       - name: Build and push Docker image
@@ -44,3 +43,15 @@ jobs:
             badal773/simpletimeservice:latest
             badal773/simpletimeservice:${{ github.ref_name }}
             badal773/simpletimeservice:${{ env.GIT_HASH }}
+            
+      - name: Update Kubernetes manifest with new image
+        run: |
+          sed -i "s|badal773/simpletimeservice:.*|badal773/simpletimeservice:${GIT_HASH}|" k8s-manifests/deployment.yaml
+
+      - name: Commit and push changes to manifest
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add k8s-manifests/deployment.yaml
+          git commit -m "Update deployment image to tag ${GIT_HASH}" || echo "No changes to commit"
+          git push origin main
