@@ -9,8 +9,9 @@ RUN go build -o simpletimeservice main.go
 
 ### Runtime stage: minimal image with non-root user
 FROM alpine:latest
-# Create a non-root user with UID 2002
-RUN adduser -D -u 2002 particle41
+# Create a non-root group and user with UID/GID 2002
+RUN addgroup -g 2002 particle41 && \
+    adduser -D -u 2002 -G particle41 particle41
 
 # Set working directory
 WORKDIR /home/particle41

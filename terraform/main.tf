@@ -90,3 +90,56 @@ resource "aws_iam_role_policy_attachment" "alb_ingress_ng" {
   policy_arn = aws_iam_policy.alb_ingress.arn
   role       = module.eks.eks_managed_node_groups["sts-pool"].iam_role_name
 }
+
+
+# EKS cluster data for providers
+data "aws_eks_cluster" "this" {
+  name = module.eks.cluster_name
+}
+
+data "aws_eks_cluster_auth" "this" {
+  name = module.eks.cluster_name
+}
+
+# Kubernetes provider for post-creation resources
+provider "kubernetes" {
+  host                   = data.aws_eks_cluster.this.endpoint
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.this.certificate_authority[0].data)
+  token                  = data.aws_eks_cluster_auth.this.token
+}
+
+# Helm provider for deploying charts
+provider "helm" {
+  kubernetes {
+    host                   = data.aws_eks_cluster.this.endpoint
+    cluster_ca_certificate = base64decode(data.aws_eks_cluster.this.certificate_authority[0].data)
+    token                  = data.aws_eks_cluster_auth.this.token
+  }
+}
+
+# Install AWS Load Balancer Controller via Helm (v1.8.1)
+resource "helm_release" "aws_load_balancer_controller" {
+  name       = "aws-load-balancer-controller"
+  repository = "https://aws.github.io/eks-charts"
+  chart      = "aws-load-balancer-controller"
+  namespace  = "kube-system"
+  version    = "1.8.1"
+
+  set {
+    name  = "clusterName"
+    value = module.eks.cluster_name
+  }
+  set {
+    name  = "region"
+    value = var.aws_region
+  }
+  set {
+    name  = "vpcId"
+    value = module.vpc.vpc_id
+  }
+  set {
+    name  = "serviceAccount.create"
+    value = "false"
+  }
+  # No serviceAccount.name, as we use node IAM role
+}
