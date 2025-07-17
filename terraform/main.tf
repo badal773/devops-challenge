@@ -32,6 +32,11 @@ module "vpc" {
   tags = {
     Name = "simpletimeservice-vpc"
   }
+
+  public_subnet_tags = {
+    "kubernetes.io/role/elb"                  = "1"
+    "kubernetes.io/cluster/simpletimeservice-eks" = "owned"
+  }
 }
 
 # Minimal EKS cluster in private subnets
@@ -66,20 +71,26 @@ module "eks" {
 }
 
 
+# Automatically update kubeconfig after EKS is created
+resource "null_resource" "update_kubeconfig" {
+  depends_on = [module.eks]
+  provisioner "local-exec" {
+    command = "aws eks update-kubeconfig --region ${var.aws_region} --name ${module.eks.cluster_name}"
+  }
+}
+
+
 # ALB Ingress Controller IAM policy (for Kubernetes ALB ingress)
 # Docs: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document
-data "aws_iam_policy_document" "alb_ingress" {
-  statement {
-    actions   = ["ec2:Describe*", "ec2:Get*", "ec2:List*", "elasticloadbalancing:*", "iam:ListRoles", "iam:ListInstanceProfiles", "iam:Get*", "cognito-idp:DescribeUserPoolClient"]
-    resources = ["*"]
-  }
+data "http" "alb_controller_policy" {
+  url = "https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/main/docs/install/iam_policy.json"
 }
 
 # ALB Ingress Controller IAM policy resource
 # Docs: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy
 resource "aws_iam_policy" "alb_ingress" {
   name   = "ALBIngressControllerIAMPolicy"
-  policy = data.aws_iam_policy_document.alb_ingress.json
+  policy = data.http.alb_controller_policy.response_body
 }
 
 # Attach ALBIngressControllerIAMPolicy to the EKS node group role
@@ -112,7 +123,7 @@ resource "helm_release" "aws_load_balancer_controller" {
   repository = "https://aws.github.io/eks-charts"
   chart      = "aws-load-balancer-controller"
   namespace  = "kube-system"
-  version    = "1.8.1"
+  version    = "1.13.3"
 
   set = [ 
             {
@@ -129,9 +140,17 @@ resource "helm_release" "aws_load_balancer_controller" {
             },
             {
             name  = "serviceAccount.create"         # No serviceAccount.name, as we use node IAM role
-
             value = "false"
+            },
+            {
+            name  = "controller.config.disable-shield"
+            value = "true"
+            },
+            {
+            name  = "controller.config.disable-waf"
+            value = "true"
             }
+
         ]
   depends_on = [module.eks]
 
@@ -140,8 +159,14 @@ resource "helm_release" "aws_load_balancer_controller" {
 
 
 resource "helm_release" "simpletimeservice" {
-  name       = "simpletimeservice"
-  chart      = "${path.module}/../terraform/helm/simpletimeservice"
-  namespace  = "default"
-  depends_on = [helm_release.aws_load_balancer_controller]
+  name        = "simpletimeservice"
+  chart       = "${path.module}/../terraform/helm/simpletimeservice"
+  namespace   = "default"
+  values = [
+    yamlencode({
+      deploy_time = timestamp()
+    })
+  ]
+
+  depends_on  = [helm_release.aws_load_balancer_controller]
 }
