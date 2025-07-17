@@ -90,3 +90,80 @@ resource "aws_iam_role_policy_attachment" "alb_ingress_ng" {
   policy_arn = aws_iam_policy.alb_ingress.arn
   role       = module.eks.eks_managed_node_groups["sts-pool"].iam_role_name
 }
+
+# EKS cluster data sources for kubernetes and helm providers
+
+# EKS cluster data for providers
+# Docs: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/eks_cluster
+data "aws_eks_cluster" "this" {
+  name = module.eks.cluster_name
+}
+
+# Docs: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/eks_cluster_auth
+data "aws_eks_cluster_auth" "this" {
+  name = module.eks.cluster_name
+}
+
+## Kubernetes provider for post-creation resources
+# Docs: https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs
+provider "kubernetes" {
+  host                   = data.aws_eks_cluster.this.endpoint
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.this.certificate_authority[0].data)
+  token                  = data.aws_eks_cluster_auth.this.token
+}
+
+## Helm provider for deploying charts
+# Docs: https://registry.terraform.io/providers/hashicorp/helm/latest/docs
+provider "helm" {
+  kubernetes =  {
+    host                   = data.aws_eks_cluster.this.endpoint
+    cluster_ca_certificate = base64decode(data.aws_eks_cluster.this.certificate_authority[0].data)
+    token                  = data.aws_eks_cluster_auth.this.token
+  }
+}
+
+## Install AWS Load Balancer Controller via Helm 
+# Docs: https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release
+resource "helm_release" "aws_load_balancer_controller" {
+  name       = "aws-load-balancer-controller"
+  repository = "https://aws.github.io/eks-charts"
+  chart      = "aws-load-balancer-controller"
+  namespace  = "kube-system"
+  version    = "1.8.1"
+
+  set = [ 
+            {
+            name  = "clusterName"
+            value = module.eks.cluster_name
+            },
+            {
+            name  = "region"
+            value = var.aws_region
+            },
+            {
+            name  = "vpcId"
+            value = module.vpc.vpc_id
+            },
+            {
+            name  = "serviceAccount.create"         # No serviceAccount.name, as we use node IAM role
+
+            value = "false"
+            }
+        ]
+}
+
+
+
+## Deploy SimpleTimeService Deployment, Service, and Ingress using kubernetes_manifest 
+# Docs: https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/manifest
+resource "kubernetes_manifest" "simpletimeservice_deployment" {
+  manifest = yamldecode(file("${path.module}/../k8s-manifests/deployment.yaml"))
+}
+
+resource "kubernetes_manifest" "simpletimeservice_service" {
+  manifest = yamldecode(file("${path.module}/../k8s-manifests/service.yaml"))
+}
+
+resource "kubernetes_manifest" "simpletimeservice_ingress" {
+  manifest = yamldecode(file("${path.module}/../k8s-manifests/ingress.yaml"))
+}
