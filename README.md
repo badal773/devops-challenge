@@ -56,11 +56,19 @@ Welcome! This project is a fun, cloud-powered way to find out the current time a
    - Enter your AWS access keys (ask your friendly IT wizard if you don’t have them—or someone else with the keys to the cloud kingdom).
    - Your AWS user needs superhero powers: able to create VPCs, EKS clusters, IAM roles, EC2 instances, and load balancers in a single bound! (Admin is easiest, but as Uncle Ben said, "with great power comes great responsibility"—so at least give yourself EC2, EKS, IAM, and ELB admin rights. No villain origin stories, please.)
 4. **Deploy the infrastructure:**
-   ```sh
-   terraform init
-   terraform apply
-   # Say 'yes' when asked (unless you don't like fun)
-   ```
+   - Initialize Terraform:
+     ```sh
+     terraform init
+     ```
+   - See what will happen (optional, but recommended!):
+     ```sh
+     terraform plan
+     ```
+   - Actually make it happen:
+     ```sh
+     terraform apply
+     # Say 'yes' when asked (unless you don't like fun)
+     ```
 5. **Find your app's URL:**
    - After a few minutes, Terraform will show you a Load Balancer URL. Open it in your browser. Voilà! Time and IP, just for you.
 
