@@ -4,6 +4,7 @@ metadata:
   name: simpletimeservice
   labels:
     app: simpletimeservice
+spec:
   replicas: {{ .Values.replicaCount }}
   strategy:
     type: RollingUpdate
@@ -34,5 +35,7 @@ metadata:
             runAsUser: 2002
             runAsGroup: 2002
             readOnlyRootFilesystem: true
+          {{- if .Values.resources }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          {{- end }}
