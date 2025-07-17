@@ -4,8 +4,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "< 6.0.0"
-
+      version = ">= 5.95.0"
     }
   }
   required_version = ">= 1.0"
@@ -62,11 +61,6 @@ module "eks" {
   }
 }
 
-# Output cluster name for kubectl usage
-output "cluster_name" {
-  value       = module.eks.cluster_name
-  description = "EKS cluster name for kubectl configuration"
-}
 
 # ALB Ingress Controller IAM policy (for Kubernetes ALB ingress)
 # Docs: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document
@@ -91,34 +85,19 @@ resource "aws_iam_role_policy_attachment" "alb_ingress_ng" {
   role       = module.eks.eks_managed_node_groups["sts-pool"].iam_role_name
 }
 
-# EKS cluster data sources for kubernetes and helm providers
 
-# EKS cluster data for providers
-# Docs: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/eks_cluster
-data "aws_eks_cluster" "this" {
-  name = module.eks.cluster_name
-}
-
-# Docs: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/eks_cluster_auth
-data "aws_eks_cluster_auth" "this" {
-  name = module.eks.cluster_name
-}
-
-## Kubernetes provider for post-creation resources
-# Docs: https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs
-provider "kubernetes" {
-  host                   = data.aws_eks_cluster.this.endpoint
-  cluster_ca_certificate = base64decode(data.aws_eks_cluster.this.certificate_authority[0].data)
-  token                  = data.aws_eks_cluster_auth.this.token
-}
 
 ## Helm provider for deploying charts
 # Docs: https://registry.terraform.io/providers/hashicorp/helm/latest/docs
 provider "helm" {
-  kubernetes =  {
-    host                   = data.aws_eks_cluster.this.endpoint
-    cluster_ca_certificate = base64decode(data.aws_eks_cluster.this.certificate_authority[0].data)
-    token                  = data.aws_eks_cluster_auth.this.token
+  kubernetes = {
+    host                   = module.eks.cluster_endpoint
+    cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+    exec = {
+      api_version = "client.authentication.k8s.io/v1beta1"
+      command     = "aws"
+      args        = ["eks", "get-token", "--cluster-name", module.eks.cluster_name]
+    }
   }
 }
 
@@ -150,20 +129,15 @@ resource "helm_release" "aws_load_balancer_controller" {
             value = "false"
             }
         ]
+  depends_on = [module.eks]
+
 }
 
 
 
-## Deploy SimpleTimeService Deployment, Service, and Ingress using kubernetes_manifest 
-# Docs: https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/manifest
-resource "kubernetes_manifest" "simpletimeservice_deployment" {
-  manifest = yamldecode(file("${path.module}/../k8s-manifests/deployment.yaml"))
-}
-
-resource "kubernetes_manifest" "simpletimeservice_service" {
-  manifest = yamldecode(file("${path.module}/../k8s-manifests/service.yaml"))
-}
-
-resource "kubernetes_manifest" "simpletimeservice_ingress" {
-  manifest = yamldecode(file("${path.module}/../k8s-manifests/ingress.yaml"))
+resource "helm_release" "simpletimeservice" {
+  name       = "simpletimeservice"
+  chart      = "${path.module}/../terraform/helm/simpletimeservice"
+  namespace  = "default"
+  depends_on = [helm_release.aws_load_balancer_controller]
 }

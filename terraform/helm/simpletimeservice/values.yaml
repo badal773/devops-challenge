@@ -1,0 +1,21 @@
+replicaCount: 1
+
+image:
+  repository: badal773/simpletimeservice
+  tag: 6e937b6
+  pullPolicy: IfNotPresent
+
+resources: {}
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  hostname: ""
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
