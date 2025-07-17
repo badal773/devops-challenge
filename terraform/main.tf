@@ -48,6 +48,10 @@ module "eks" {
 
   enable_cluster_creator_admin_permissions = true
 
+  # API server endpoint access
+  cluster_endpoint_public_access  = true
+  cluster_endpoint_private_access = false
+
   # Managed node group for EKS
   # Docs: https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest/submodules/eks-managed-node-group
   eks_managed_node_groups = {
@@ -55,7 +59,7 @@ module "eks" {
       desired_size   = 1
       max_size       = 1
       min_size       = 1
-      instance_types = ["t3.small"]
+      instance_types = ["c5.large"]
       subnet_ids     = module.vpc.private_subnets
     }
   }
