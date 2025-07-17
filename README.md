@@ -65,18 +65,20 @@ Welcome! This project is a fun, cloud-powered way to find out the current time a
      terraform plan
      ```
    - Actually make it happen:
+     Run:
      ```sh
      terraform apply
-     # Say 'yes' when asked (unless you don't like fun)
      ```
+     (Say 'yes' when asked, unless you don't like fun. Or use `terraform apply --auto-approve` to skip the prompt!)
 5. **Find your app's URL:**
    - After a few minutes, Terraform will show you a Load Balancer URL. Open it in your browser. Voilà! Time and IP, just for you.
 
 ### How to clean up (so you don't get a surprise bill):
+Run:
 ```sh
 terraform destroy
-# Say 'yes' again (unless you want to keep paying AWS for your new clock)
 ```
+(Say 'yes' again, or use `terraform destroy --auto-approve` to skip the prompt. Unless you want to keep paying AWS for your new clock!)
 
 ---
 
