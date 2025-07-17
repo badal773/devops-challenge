@@ -43,4 +43,4 @@ jobs:
           tags: |
             badal773/simpletimeservice:latest
             badal773/simpletimeservice:${{ github.ref_name }}
-            badal773/simpletimeservice:${GIT_HASH}
+            badal773/simpletimeservice:${{ env.GIT_HASH }}
