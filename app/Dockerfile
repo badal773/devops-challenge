@@ -1,6 +1,6 @@
 ### Build stage: compile the Go binary
 FROM golang:1.22-alpine AS builder
-# Setting up working directory 
+# Setting up working directory
 WORKDIR /app
 # Copy Go source code
 COPY main.go .
