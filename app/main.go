@@ -6,6 +6,11 @@ import (
 	"time"
 )
 
+type Response struct {
+	Timestamp string `json:"timestamp"`
+	IP        string `json:"ip"`
+}
+
 // handler returns the current UTC timestamp and the visitor's IP in JSON format
 func handler(w http.ResponseWriter, r *http.Request) {
 
@@ -18,10 +23,10 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		ip = r.RemoteAddr
 	}
 
-	// Create the response map
-	resp := map[string]string{
-		"timestamp": time.Now().UTC().Format(time.RFC3339),
-		"ip":        ip,
+	// Create the response struct
+	resp := Response{
+		Timestamp: time.Now().UTC().Format(time.RFC3339),
+		IP:        ip,
 	}
 	// Encode the response as JSON
 	json.NewEncoder(w).Encode(resp)
