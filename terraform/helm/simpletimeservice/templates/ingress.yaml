@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: simpletimeservice
+  name: simpletimeservice-ingress
   annotations:
     {{- with .Values.ingress.annotations }}
     {{- toYaml . | nindent 4 }}
@@ -16,7 +16,7 @@ spec:
               service:
                 name: simpletimeservice
                 port:
-                  number: 8080
+                  name: http
       {{- if .Values.ingress.hostname }}
       host: {{ .Values.ingress.hostname }}
       {{- end }}
