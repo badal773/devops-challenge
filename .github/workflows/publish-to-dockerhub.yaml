@@ -1,0 +1,43 @@
+# https://docs.docker.com/build/ci/github-actions/multi-platform/
+name: Publishing image to Docker Hub
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - app/**
+jobs:
+  push_to_registry:
+    name: Push Docker image to Docker Hub
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./app
+          platforms: linux/amd64,linux/arm64
+          file: ./app/Dockerfile
+          push: true
+          tags: |
+            badal773/simpletimeservice:latest
+            badal773/simpletimeservice:${{ github.ref_name }}
+            badal773/simpletimeservice:${{ github.sha::7 }}
