@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: simpletimeservice
+  labels:
+    app: simpletimeservice
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: simpletimeservice
+  template:
+    metadata:
+      labels:
+        app: simpletimeservice
+    spec:
+      securityContext:
+        runAsUser: 2002
+        runAsGroup: 2002
+        fsGroup: 2002
+      containers:
+        - name: simpletimeservice
+          image: badal773/simpletimeservice:6e937b6
+          ports:
+            - containerPort: 8080
+              name: app
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 2002
+            runAsGroup: 2002
+            readOnlyRootFilesystem: true
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
