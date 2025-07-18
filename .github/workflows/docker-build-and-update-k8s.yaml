@@ -49,7 +49,7 @@ jobs:
         with:
           image-ref: 'badal773/simpletimeservice:${{ env.GIT_HASH }}'
           format: 'table'
-          exit-code: '0'
+          exit-code: '1'
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
