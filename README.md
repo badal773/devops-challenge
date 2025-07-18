@@ -1,4 +1,3 @@
-
 # SimpleTimeService: The Time-Telling Cloud App (with a Smile!)
 
 ## Getting Started
@@ -80,6 +79,32 @@ Run:
 terraform destroy
 ```
 (Say 'yes' again, or use `terraform destroy --auto-approve` to skip the prompt. Unless you want to keep paying AWS for your new clock!)
+
+---
+
+## Extra Credit: Advanced DevOps Goodies
+
+### 1. Remote Terraform State (S3 & DynamoDB)
+This project supports remote state for Terraform! To enable it, add the following to your `terraform/main.tf`:
+```hcl
+terraform {
+  backend "s3" {
+    bucket         = "<your-s3-bucket-name>"
+    key            = "devops-challenge/terraform.tfstate"
+    region         = "ap-south-1"
+    dynamodb_table = "<your-dynamodb-table-name>"
+    encrypt        = true
+  }
+}
+```
+- Create the S3 bucket and DynamoDB table before running `terraform init`.
+- This keeps your state safe, shared, and locked!
+
+### 2. CI/CD Pipeline
+- The repo includes a GitHub Actions workflow that:
+  - Builds and pushes the Docker image to DockerHub
+  - Runs `terraform plan` and `terraform apply` (if TF_STATE_REMOTE is enabled)
+- See [`.github/workflows/docker-build-and-update-k8s.yaml`](.github/workflows/docker-build-and-update-k8s.yaml) for details.
 
 ---
 
