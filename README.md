@@ -30,8 +30,9 @@ Welcome! This project is a fun, cloud-powered way to find out the current time a
 3. **Run the app:**
    ```sh
    docker run -p 8080:8080 simpletimeservice
-   # Open http://localhost:8080 in your browser
    ```
+    (Open http://localhost:8080 in your browser)
+
 4. **See the magic:**
    - You'll get a JSON with the current time and your IP. (If you see the time, congrats! If you see your IP, don't panic—it's just your computer saying hi.)
 
