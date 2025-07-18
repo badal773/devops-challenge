@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: badal773/simpletimeservice
-  tag: 5950f86
+  tag: 7c91496
   pullPolicy: IfNotPresent
 
 resources: {}
