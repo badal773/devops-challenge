@@ -16,24 +16,33 @@ Welcome! This project is a fun, cloud-powered way to find out the current time a
 
 **Goal:** Build a tiny web app that tells you the current time and your IP address. No ads, no cookies, just the facts (and a little fun).
 
-### How to run locally (for the curious or the hungry-for-time):
+### How to run locally (or instantly in Docker!)
 
 1. **Go to the app folder:**
    ```sh
    cd app
    ```
-2. **Build the Docker image:**
+2. **Run instantly from DockerHub (no build needed!):**
+   ```sh
+   docker pull badal773/simpletimeservice:main
+   docker run -p 8080:8080 badal773/simpletimeservice:main
+   ```
+   Open [http://localhost:8080](http://localhost:8080) in your browser and watch the magic happen! ✨
+   _No need to build locally—just run it straight from the cloud!_
+
+3. **See the magic:**
+   - You'll get a JSON with the current time and your IP. (If you see the time, congrats! If you see your IP, don't panic—it's just your computer saying hi.)
+
+<details>
+<summary>4. Build the Docker image yourself (if you want to tinker or test changes)</summary>
+
    ```sh
    docker build -t simpletimeservice .
-   ```
-3. **Run the app:**
-   ```sh
    docker run -p 8080:8080 simpletimeservice
    ```
-    (Open http://localhost:8080 in your browser)
+   (Open http://localhost:8080 in your browser)
+</details>
 
-4. **See the magic:**
-   - You'll get a JSON with the current time and your IP. (If you see the time, congrats! If you see your IP, don't panic—it's just your computer saying hi.)
 
 ---
 
