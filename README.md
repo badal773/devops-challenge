@@ -1,4 +1,5 @@
-# SimpleTimeService: The Time-Telling Cloud App (with a Smile!)
+# SimpleTimeService: The Cloud Clock That Knows Your IP!
+
 
 ## Getting Started
 
@@ -22,7 +23,7 @@ Welcome! This project is a fun, cloud-powered way to find out the current time a
    ```sh
    cd app
    ```
-2. **Run instantly from DockerHub (no build needed!):**
+2. a. **Run instantly from DockerHub (no build needed!):**
    ```sh
    docker pull badal773/simpletimeservice:main
    docker run -p 8080:8080 badal773/simpletimeservice:main
@@ -30,19 +31,18 @@ Welcome! This project is a fun, cloud-powered way to find out the current time a
    Open [http://localhost:8080](http://localhost:8080) in your browser and watch the magic happen! ✨
    _No need to build locally—just run it straight from the cloud!_
 
-3. **See the magic:**
-   - You'll get a JSON with the current time and your IP. (If you see the time, congrats! If you see your IP, don't panic—it's just your computer saying hi.)
-
-<details>
-<summary>4. Build the Docker image yourself (if you want to tinker or test changes)</summary>
+   <details>
+   <summary>b. Build the Docker image yourself (if you want to tinker or test changes)</summary>
 
    ```sh
    docker build -t simpletimeservice .
    docker run -p 8080:8080 simpletimeservice
    ```
    (Open http://localhost:8080 in your browser)
-</details>
+   </details>
 
+3. **See the magic:**
+   - You'll get a JSON with the current time and your IP. (If you see the time, congrats! If you see your IP, don't panic—it's just your computer saying hi.)
 
 ---
 
